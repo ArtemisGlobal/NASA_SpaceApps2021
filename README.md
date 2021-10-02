@@ -12,6 +12,7 @@ Once MySQL is installed, we need to install python 3.8.5.
 Install [Python 3.8.10](https://www.python.org/downloads/release/python-3810/)
 
 After Python is installed, install the Python packages using:
+
 ```shell
 python3 -m venv hackathon 
 source hackathon/bin/activate
