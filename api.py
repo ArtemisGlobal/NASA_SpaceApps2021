@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, request, session, redirect, url_for, jsonify
+from flask import Flask, request, session, redirect, url_for, jsonify, send_from_directory
 from flask_mysqldb import MySQL
 
 
@@ -18,8 +18,13 @@ def parse_logs_form(req, target):
     app.logger.debug(f'Looking for {target}')
     if target == 'logdate':
         return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if target == 'username':
+        return session['username']
     try:
-        return req.form[target]
+        value = req.form[target]
+        if value:
+            return value
+        return None
     except:
         return None
 
@@ -28,6 +33,8 @@ def parse_logs_json(req, target):
     app.logger.debug(f'Looking for {target}')
     if target == 'logdate':
         return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if target == 'username':
+        return session['username']
     try:
         return req[target]
     except:
@@ -45,7 +52,7 @@ def logs():
         return jsonify(rv)
 
     if request.method == 'POST':
-        values = ['username', 'logdate', 'logtext', 'hardware', 'UpdateID', 'hashtag', 'approvelog']
+        values = ['username', 'logdate', 'logtext', 'mediaID', 'hardware', 'UpdateID', 'hashtag', 'approvelog']
         app.logger.debug(f'get_json: {request.get_json()}')
 
         if request.get_json():
@@ -53,13 +60,21 @@ def logs():
         else:
             converted = tuple([parse_logs_form(request, val) for val in values])
         app.logger.debug(f'converted: {converted}')
-        sql = 'INSERT INTO `logs_db`.`logs` (username, logdate, logtext, hardware, UpdateID, hashtag, approvelog) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+        sql = 'INSERT INTO `logs_db`.`logs` (username, logdate, logtext, mediaID, hardware, UpdateID, hashtag, approvelog) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
 
         cur = mysql.connection.cursor()
         cur.execute(sql, converted)
         mysql.connection.commit()
 
         return "Successfully added new log"
+
+
+@app.route("/logs/add")
+def add_logs():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    return send_from_directory('static', 'logs.html')
 
 
 @app.route("/medias", methods=['GET', 'POST'])
@@ -88,6 +103,14 @@ def media():
         mysql.connection.commit()
 
         return "Successfully added new media"
+
+
+@app.route("/medias/add")
+def add_media():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    return send_from_directory('static', 'media.html')
 
 
 @app.route("/users", methods=['GET'])
@@ -123,13 +146,7 @@ def login():
             session['approval'] = user_data['approval']
             return redirect(url_for('index'))
         return redirect(url_for('login'))
-    return '''
-                <form action='login' method='POST'>
-                 <input type='text' name='username' id='username' placeholder='username'/>
-                 <input type='password' name='password' id='password' placeholder='password'/>
-                 <input type='submit' name='submit'/>
-                </form>
-                '''
+    return send_from_directory('static', 'login.html')
 
 
 @app.route('/logout')
