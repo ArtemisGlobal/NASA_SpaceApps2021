@@ -15,6 +15,9 @@ try:
     with connect.cursor() as cur:
         # new datatbase
         cur.execute('CREATE DATABASE {}'.format(mydatabase))
+
+        #cur.execute('CREATE TABLE `logs_db`.`userenum` (type ENUM(`public`, `researcher`, `mission control`) DEFAULT `public`);')
+
         # new table
         # 'users' table should be main table that's created first (user creates account first then can create log with media added to that log input)
         cur.execute('CREATE TABLE `logs_db`.`users` (\n'
@@ -23,7 +26,7 @@ try:
                     '`firstname` VARCHAR(30) NOT NULL,\n'
                     '`lastname` VARCHAR(30) NOT NULL,\n'
                     '`company` VARCHAR(30) NOT NULL,\n'
-                    '`approval` BOOLEAN NOT NULL,\n'
+                    '`role` ENUM(\'public\', \'researcher\', \'mission control\') DEFAULT \'public\' NOT NULL,\n'
                     ' PRIMARY KEY (`username`));')
 
         cur.execute('CREATE TABLE `logs_db`.`media` (\n'
@@ -37,7 +40,8 @@ try:
                     '`logID` int AUTO_INCREMENT NOT NULL UNIQUE,\n'
                     '`username` VARCHAR(30) NOT NULL,\n'
                     '`logdate` DATETIME NOT NULL,\n'
-                    '`logtext` TEXT,\n'
+                    '`logtext` TEXT NOT NULL,\n'
+                    '`logtype` VARCHAR(30) NOT NULL,\n'
                     '`mediaID` int,\n'
                     '`hardware` TEXT,\n'
                     '`updateID` int DEFAULT NULL,\n'

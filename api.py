@@ -1,6 +1,6 @@
 import datetime
 
-from flask import Flask, request, session, redirect, url_for, jsonify, send_from_directory
+from flask import Flask, request, session, redirect, url_for, jsonify, send_from_directory, Response, abort
 from flask_mysqldb import MySQL
 
 
@@ -52,7 +52,9 @@ def logs():
         return jsonify(rv)
 
     if request.method == 'POST':
-        values = ['username', 'logdate', 'logtext', 'mediaID', 'hardware', 'UpdateID', 'hashtag', 'approvelog']
+        if session['role'] == 'public':
+            abort(401)
+        values = ['username', 'logdate', 'logtext', 'logtype', 'mediaID', 'hardware', 'UpdateID', 'hashtag', 'approvelog']
         app.logger.debug(f'get_json: {request.get_json()}')
 
         if request.get_json():
@@ -60,7 +62,7 @@ def logs():
         else:
             converted = tuple([parse_logs_form(request, val) for val in values])
         app.logger.debug(f'converted: {converted}')
-        sql = 'INSERT INTO `logs_db`.`logs` (username, logdate, logtext, mediaID, hardware, UpdateID, hashtag, approvelog) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+        sql = 'INSERT INTO `logs_db`.`logs` (username, logdate, logtext, logtype, mediaID, hardware, UpdateID, hashtag, approvelog) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
         cur = mysql.connection.cursor()
         cur.execute(sql, converted)
@@ -73,6 +75,11 @@ def logs():
 def add_logs():
     if 'username' not in session:
         return redirect(url_for('login'))
+    app.logger.debug(session['role'])
+    app.logger.debug(session['role'] == 'mission control')
+    app.logger.debug(session['role'] == 'mission control' or session['role'] == 'researcher')
+    if session['role'] == 'public':
+        abort(401)
 
     return send_from_directory('static', 'logs.html')
 
@@ -110,6 +117,8 @@ def add_media():
     if 'username' not in session:
         return redirect(url_for('login'))
 
+    if session['role'] == 'public':
+        abort(401)
     return send_from_directory('static', 'media.html')
 
 
@@ -117,9 +126,15 @@ def add_media():
 def users():
     if 'username' not in session:
         return redirect(url_for('login'))
+
     if request.method == 'GET':
+        if session['role'] != 'mission control':
+            cur = mysql.connection.cursor()
+            cur.execute(f"SELECT firstname, lastname FROM logs_db.users WHERE logs_db.users.username='{session['username']}';")
+            rv = cur.fetchall()
+            return jsonify(rv)
         cur = mysql.connection.cursor()
-        cur.execute('''SELECT firstname, lastname FROM logs_db.users''')
+        cur.execute(f"SELECT firstname, lastname FROM logs_db.users;")
         rv = cur.fetchall()
         return jsonify(rv)
 
@@ -143,7 +158,7 @@ def login():
         # Plain text is BAD! But hackathon, so quick and very dirty!!
         if request.form['password'] == user_data['password']:
             session['username'] = request.form['username']
-            session['approval'] = user_data['approval']
+            session['role'] = user_data['role']
             return redirect(url_for('index'))
         return redirect(url_for('login'))
     return send_from_directory('static', 'login.html')
@@ -167,3 +182,8 @@ def get_user(username):
         return None
 
     return user_data[0]
+
+
+@app.errorhandler(401)
+def custom_401(error):
+    return Response('<Why access is denied string goes here...>', 401, {'WWW-Authenticate':'Basic realm="Login Required"'})
