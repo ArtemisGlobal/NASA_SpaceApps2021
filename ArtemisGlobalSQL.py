@@ -40,7 +40,7 @@ try:
                     '`logtext` TEXT,\n'
                     '`mediaID` int,\n'
                     '`hardware` TEXT,\n'
-                    '`updateID` VARCHAR(30) DEFAULT NULL,\n'
+                    '`updateID` int DEFAULT NULL,\n'
                     '`hashtag` VARCHAR(30),\n'
                     '`approvelog` BOOLEAN DEFAULT FALSE,\n'
                     ' FOREIGN KEY (`username`) REFERENCES `users` (`username`),\n'
