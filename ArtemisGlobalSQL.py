@@ -26,6 +26,13 @@ try:
                     '`approval` BOOLEAN NOT NULL,\n'
                     ' PRIMARY KEY (`username`));')
 
+        cur.execute('CREATE TABLE `logs_db`.`media` (\n'
+                    '`mediaID` int NOT NULL AUTO_INCREMENT,\n'
+                    '`imageref` VARCHAR(256),\n'
+                    '`videoref` VARCHAR(256),\n'
+                    '`audioref` VARCHAR(256),\n'
+                    ' PRIMARY KEY (`mediaID`));')
+
         cur.execute('CREATE TABLE `logs_db`.`logs` (\n'
                     '`logID` int AUTO_INCREMENT NOT NULL UNIQUE,\n'
                     '`username` VARCHAR(30) NOT NULL,\n'
@@ -33,10 +40,11 @@ try:
                     '`logtext` TEXT,\n'
                     '`mediaID` int,\n'
                     '`hardware` TEXT,\n'
-                    '`updateID` VARCHAR(30) DEFAULT NULL,\n'
+                    '`updateID` int DEFAULT NULL,\n'
                     '`hashtag` VARCHAR(30),\n'
                     '`approvelog` BOOLEAN DEFAULT FALSE,\n'
                     ' FOREIGN KEY (`username`) REFERENCES `users` (`username`),\n'
+                    ' FOREIGN KEY (`mediaID`) REFERENCES `media` (`mediaID`),\n'
                     ' PRIMARY KEY (`logID`));')
 
         cur.execute(
@@ -44,16 +52,8 @@ try:
         )
 
         cur.execute(
-            'CREATE INDEX idx_media ON `logs_db`.`logs` (`mediaID`);'
+            'CREATE INDEX idx_media ON `logs_db`.`media` (`mediaID`);'
         )
-
-        cur.execute('CREATE TABLE `logs_db`.`media` (\n'
-                    '`mediaID` int NOT NULL AUTO_INCREMENT,\n'
-                    '`imageref` VARCHAR(256),\n'
-                    '`videoref` VARCHAR(256),\n'
-                    '`audioref` VARCHAR(256),\n'
-                    ' FOREIGN KEY (`mediaID`) REFERENCES `logs` (`mediaID`),\n'
-                    ' PRIMARY KEY (`mediaID`));')
 
 except Exception as e:
     print("Exception Error")
