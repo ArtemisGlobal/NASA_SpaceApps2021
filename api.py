@@ -1,17 +1,25 @@
 import datetime
+import os
 
-from flask import Flask, request, session, redirect, url_for, jsonify, send_from_directory, Response, abort
+import boto3
+from botocore.exceptions import ClientError
+from flask import Flask, request, session, redirect, url_for, jsonify, send_from_directory, Response, abort, flash
 from flask_mysqldb import MySQL
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
 mysql = MySQL(app)
 
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3'}
 
 app.config['MYSQL_USER'] = 'artemis_user'
 app.config['MYSQL_PASSWORD'] = 'TeamArtemis2021!'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['SECRET_KEY'] = "ASecretKey"
+app.config['UPLOAD_FOLDER'] = '.'
+
+BUCKET = 'nasaappsartemis'
 
 
 def parse_logs_form(req, target):
@@ -84,6 +92,10 @@ def add_logs():
     return send_from_directory('static', 'logs.html')
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route("/medias", methods=['GET', 'POST'])
 def media():
     if 'username' not in session:
@@ -95,18 +107,47 @@ def media():
         return jsonify(rv)
 
     if request.method == 'POST':
-        media_values = ['imageref', 'videoref', 'audioref']
-        app.logger.debug(f'get_json: {request.get_json()}')
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect('medias/add')
 
-        if request.get_json():
-            converted = tuple([parse_logs_json(request.get_json(), val) for val in media_values])
-        else:
-            converted = tuple([parse_logs_form(request, val) for val in media_values])
-        app.logger.debug(f'converted: {converted}')
+        file = request.files['file']
+        app.logger.debug(type(file))
+        if file.filename == '':
+            flash('No selected file')
+            return redirect('medias/add')
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        imageref, videoref, audioref = None, None, None
+        if filename.rsplit('.', 1)[1].lower() in ['pdf', 'png', 'jpg', 'jpeg', 'gif']:
+            #https://nasaappsartemis.s3.us-east-2.amazonaws.com/DreamChaser.jpg
+            imageref = f'https://{BUCKET}.s3.us-east-2.amazonaws.com/{filename}'
+        if filename.rsplit('.', 1)[1].lower() in ["mp4"]:
+            videoref = f'https://{BUCKET}.s3.us-east-2.amazonaws.com/{filename}'
+        if filename.rsplit('.', 1)[1].lower() in ['mp3']:
+            audioref = f'https://{BUCKET}.s3.us-east-2.amazonaws.com/{filename}'
+
+        app.logger.debug(os.environ.get('AWS_SECRET_ACCESS_KEY'))
+        # Upload the file
+        app.logger.debug(f'filename: {filename}')
+        app.logger.debug(f'imageref: {imageref}  videoref: {videoref}  audioref: {audioref}')
+        s3_client = boto3.client('s3')
+        try:
+            response = s3_client.upload_file(filename, BUCKET, os.path.basename(filename), ExtraArgs={'ACL':'public-read'})
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        except ClientError as e:
+            app.logger.error("Error Uploading.")
+            app.logger.error(e)
+
+        app.logger.debug(f'S3 Response: {response}')
+
         sql = 'INSERT INTO `logs_db`.`media` (imageref, videoref, audioref) VALUES (%s, %s, %s)'
 
         cur = mysql.connection.cursor()
-        cur.execute(sql, converted)
+        cur.execute(sql, (imageref, videoref, audioref))
         mysql.connection.commit()
 
         return "Successfully added new media"
