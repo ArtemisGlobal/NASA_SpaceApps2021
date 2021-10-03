@@ -2,13 +2,10 @@ import datetime
 
 from flask import Flask, request, session, redirect, url_for, jsonify
 from flask_mysqldb import MySQL
-import flask_login
 
 
 app = Flask(__name__)
 mysql = MySQL(app)
-login_manager = flask_login.LoginManager()
-login_manager.init_app(app)
 
 
 app.config['MYSQL_USER'] = 'artemis_user'
