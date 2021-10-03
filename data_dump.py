@@ -24,10 +24,10 @@ for data in user_data:
     send_request(user_string, data)
 
 
-   # username, logdate,     logtext,     hardware, updateID, hashtag, approvelog)
-log_data = [('ChrisN', '2020-10-09', 'temp is 15C', 'thermo', '', '#spacetemps', True),
-            ('DaveB', '2019-12-15', 'rock is hard', 'hammer', '1', '#spacerocks', True),
-            ('RuthF', '2021-01-01', '5cm soil sample', 'shovel', '', '#spacesoil', False)]
+             # username, logdate,     logtext,     hardware, updateID, hashtag, approvelog)
+log_data = [('ChrisN', '2020-10-09', 'temp is 15C', 'thermo', None, '#spacetemps', True),
+            ('DaveB', '2019-12-15', 'rock is hard', 'hammer', 1, '#spacerocks', True),
+            ('RuthF', '2021-01-01', '5cm soil sample', 'shovel', None, '#spacesoil', False)]
 
 for data in log_data:
     log_string = "INSERT INTO `logs_db`.`logs` (username, logdate, logtext, hardware, UpdateID, hashtag, approvelog) VALUES (%s, %s, %s, %s, %s, %s, %s);"
