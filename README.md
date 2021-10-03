@@ -28,3 +28,10 @@ We will need to export the name of the file to run.
 EXPORT FLASK_APP=api
 flask run --host=0.0.0.0
 ```
+
+## API
+
+You must be logged in to interact with the API.
+To log in go to the `/login` endpoint.
+If you are logged in as a public profile, you may only retrieve data.
+If you are logged in as not public, you can upload things to the database as well as retrieve.

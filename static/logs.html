@@ -60,13 +60,15 @@
     </style>
   </head>
   <body>
-    <form action="/media" method="POST">
+    <form action="/logs" method="POST">
       <h1>Media Submission Form</h1>
       <div class="formcontainer">
       <hr/>
       <div class="container">
         <label for="logtext"><strong>Log Text (Required)</strong></label>
         <input type="text" placeholder="Enter Text" name="logtext" required>
+        <label for="logtype"><strong>Log Type (Required)</strong></label>
+        <input type="text" placeholder="Enter Text" name="logtype" required>
         <label for="mediaID"><strong>Media ID</strong></label>
         <input type="text" placeholder="Enter Media ID" name="mediaID">
         <label for="hardware"><strong>Hardware</strong></label>
