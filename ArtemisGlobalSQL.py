@@ -16,35 +16,36 @@ try:
         # new datatbase
         cur.execute('CREATE DATABASE {}'.format(mydatabase))
         # new table
+        # 'users' table should be main table that's created first (user creates account first then can create log with media added to that log input)
+        cur.execute('CREATE TABLE `logs_db`.`users` (\n'
+                    '`username` VARCHAR(30) NOT NULL UNIQUE,\n'
+                    '`password` VARCHAR(50) NOT NULL,\n'
+                    '`firstname` VARCHAR(30) NOT NULL,\n'
+                    '`lastname` VARCHAR(30) NOT NULL,\n'
+                    '`company` VARCHAR(30) NOT NULL,\n'
+                    '`approval` BOOLEAN NOT NULL,\n'
+                    ' PRIMARY KEY (`username`));')
+
         cur.execute('CREATE TABLE `logs_db`.`logs` (\n'
-                    '`logID` VARCHAR(20) NOT NULL UNIQUE,\n'
+                    '`logID` int AUTO_INCREMENT NOT NULL UNIQUE,\n'
                     '`username` VARCHAR(30) NOT NULL,\n'
                     '`logdate` DATETIME NOT NULL,\n'
                     '`logtext` TEXT,\n'
                     '`mediaID` int,\n'
                     '`hardware` TEXT,\n'
-                    '`otherUsername` VARCHAR(30),\n'
-                    '`logEdit` DATETIME,\n'
+                    '`updateID` VARCHAR(30) DEFAULT NULL,\n'
                     '`hashtag` VARCHAR(30),\n'
                     '`approvelog` BOOLEAN DEFAULT FALSE,\n'
+                    ' FOREIGN KEY (`username`) REFERENCES `users` (`username`),\n'
                     ' PRIMARY KEY (`logID`));')
-        cur.execute(
-            'CREATE INDEX idx_username ON `logs_db`.`logs` (`username`);'
-        )
 
+        cur.execute(
+            'CREATE INDEX idx_username ON `logs_db`.`users` (`username`);'
+        )
 
         cur.execute(
             'CREATE INDEX idx_media ON `logs_db`.`logs` (`mediaID`);'
         )
-
-        cur.execute('CREATE TABLE `logs_db`.`users` (\n'
-                    '`username` VARCHAR(30) NOT NULL UNIQUE,\n'
-                    '`firstname` VARCHAR(30) NOT NULL,\n'
-                    '`lastname` VARCHAR(30) NOT NULL,\n'
-                    '`company` VARCHAR(30) NOT NULL,\n'
-                    '`approval` BOOLEAN NOT NULL,\n'
-                    ' FOREIGN KEY (`username`) REFERENCES `logs` (`username`),\n'
-                    ' PRIMARY KEY (`username`));')
 
         cur.execute('CREATE TABLE `logs_db`.`media` (\n'
                     '`mediaID` int NOT NULL AUTO_INCREMENT,\n'
