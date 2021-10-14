@@ -32,6 +32,8 @@ flask run --host=0.0.0.0
 ## API
 
 You must be logged in to interact with the API.
-To log in go to the `/login` endpoint.
+To log in go to the `/login` endpoint. 
+Login Credentials:
+Team.Artemis.Global@gmail.com / TeamArtemis2021!
 If you are logged in as a public profile, you may only retrieve data.
 If you are logged in as not public, you can upload things to the database as well as retrieve.
